@@ -1,0 +1,765 @@
+================================================================================
+================================================================================
+                         PŘEHLED C# – STUDIJNÍ PŘÍRUČKA
+================================================================================
+================================================================================
+
+
+================================================================================
+1. TŘÍDA V C# (CLASS) A ZAPOUZDŘENÍ
+================================================================================
+
+V jazyce C# je třída (class) základním stavebním kamenem objektově orientovaného
+programování. Třída představuje vzor (předpis), podle kterého se vytvářejí
+konkrétní instance (objekty).
+
+Třída obvykle obsahuje:
+  • Fieldy (atributy, privátní proměnné uchovávající vnitřní stav)
+  • Property (vlastnosti poskytující kontrolovaný přístup k datům)
+  • Konstruktory (metody pro inicializaci objektu)
+  • Metody (funkce definující chování objektu)
+
+
+--------------------------------------------------------------------------------
+1.1 Fieldy a Property (Zapouzdření / Encapsulation)
+--------------------------------------------------------------------------------
+
+• Field (pole/atribut):
+  Proměnná definovaná uvnitř třídy, která uchovává stav objektu.
+  Bývá obvykle soukromá (private) a přímo zvenčí nepřístupná.
+
+• Property (vlastnost):
+  Poskytuje kontrolovaný přístup k fieldům – umožňuje hodnoty bezpečně číst (get)
+  nebo měnit (set).
+
+• Zapouzdření (Encapsulation):
+  Jedna ze základních myšlenek OOP. Skrýváme vnitřní implementaci a data třídy.
+  V bloku 'set' můžeme provést validaci a zamezit tak nastavení neplatných hodnot.
+
+Příklad zapouzdření s kontrolou v setteru:
+--------------------------------------------------------------------------------
+public class Student
+{
+    // Privátní backing field pro uložení jména
+    private string _jmeno;
+
+    // Property s kontrolou neplatných hodnot (nesmí být prázdné)
+    public string Jmeno
+    {
+        get { return _jmeno; }
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new ArgumentException("Jméno nesmí být prázdné.");
+            }
+            _jmeno = value;
+        }
+    }
+
+    // Privátní backing field pro uložení věku
+    private int _vek;
+
+    // Property s validací věku (nesmí být záporný)
+    public int Vek
+    {
+        get { return _vek; }
+        set
+        {
+            if (value < 0)
+            {
+                throw new ArgumentException("Věk nemůže být záporný.");
+            }
+            _vek = value;
+        }
+    }
+
+    // Konstruktor – hodnoty nastavujeme přes property, aby proběhla validace
+    public Student(string jmeno, int vek)
+    {
+        Jmeno = jmeno;
+        Vek = vek;
+    }
+
+    // Textová reprezentace studenta
+    public override string ToString()
+    {
+        return $"Student: {Jmeno}, Věk: {Vek}";
+    }
+}
+--------------------------------------------------------------------------------
+
+Použití v kódu (např. v metodě Main):
+--------------------------------------------------------------------------------
+try
+{
+    // Platné zadání
+    Student s1 = new Student("Petr", 20);
+    Console.WriteLine(s1); // Výstup: Student: Petr, Věk: 20
+
+    // Neplatné jméno – vyvolá výjimku ArgumentException
+    Student s2 = new Student("", 20);
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Chyba: {ex.Message}");
+}
+
+try
+{
+    // Neplatný věk – vyvolá výjimku ArgumentException
+    Student s3 = new Student("Eva", -5);
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Chyba: {ex.Message}");
+}
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+1.2 Automatické properties (Auto-implemented properties)
+--------------------------------------------------------------------------------
+
+Pokud nepotřebujeme v get ani v set žádnou dodatečnou logiku či validaci,
+nemusíme psát privátní field ručně. C# automaticky vytvoří skrytý backing field.
+
+Příklad:
+--------------------------------------------------------------------------------
+public class Osoba
+{
+    // C# automaticky na pozadí vytvoří anonymní privátní backing field
+    public string Jmeno { get; set; }
+}
+--------------------------------------------------------------------------------
+
+• Výhoda:  Méně kódu, čistota a vysoká přehlednost.
+• Nevýhoda: Nelze přímo v těle property provádět validaci nebo zakázané stavy
+            (pro validaci je nutné přejít na plnou property s backing fieldem).
+
+
+--------------------------------------------------------------------------------
+1.3 Readonly a Const Fieldy
+--------------------------------------------------------------------------------
+
+1. readonly field:
+   • Hodnotu lze nastavit pouze při deklaraci nebo v konstruktoru třídy.
+   • Po vytvoření objektu je již hodnota neměnná.
+   • Použití: Pro identifikační údaje neměnné po dobu života objektu (ID, SPZ, rodné číslo).
+
+Příklad:
+--------------------------------------------------------------------------------
+public class Auto
+{
+    private readonly string _spz;
+
+    public Auto(string spz)
+    {
+        _spz = spz; // Lze nastavit v konstruktoru
+    }
+
+    public string ZiskejSpz() => _spz;
+}
+--------------------------------------------------------------------------------
+
+2. const field:
+   • Hodnota je absolutně neměnná (konstanta v době kompilace).
+   • Musí být inicializována přímo při deklaraci.
+   • Implicitně se chová jako static (patří třídě, nikoliv instanci).
+   • Použití: Pro globální matematické a fyzikální konstanty.
+
+Příklad:
+--------------------------------------------------------------------------------
+public class Matematika
+{
+    public const double Pi = 3.14159; // Hodnota je pevně daná při překladu
+}
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+1.4 Readonly automatické properties (init accessor)
+--------------------------------------------------------------------------------
+
+Od verze C# 9.0 je k dispozici 'init' accessor. Ten umožňuje nastavit hodnotu
+property POUZE během inicializace objektu (v objektovém inicializátoru nebo v konstruktoru),
+ale nikoliv po jeho vytvoření.
+
+To je ideální pro tvorbu tzv. neměnných (immutable) objektů.
+
+Příklad:
+--------------------------------------------------------------------------------
+public class Osoba
+{
+    public string Jmeno { get; init; }
+    public int Vek { get; init; }
+}
+
+class Program
+{
+    static void Main()
+    {
+        // Inicializace objektu přes objektový inicializátor – povoleno
+        var osoba = new Osoba { Jmeno = "Petr", Vek = 30 };
+        Console.WriteLine($"Jméno: {osoba.Jmeno}, Věk: {osoba.Vek}");
+
+        // CHYBA PŘI PŘEKLADU! Hodnotu init property nelze dodatečně měnit:
+        // osoba.Jmeno = "Jan";
+    }
+}
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+1.5 Kombinace 'init' a konstruktoru
+--------------------------------------------------------------------------------
+
+Pokud chceme zajistit, že povinné hodnoty musí být zadány hned v konstruktoru,
+ale zároveň zaručit jejich neměnnost:
+
+Příklad:
+--------------------------------------------------------------------------------
+public class Auto
+{
+    public string Znacka { get; init; }
+    public string Model { get; init; }
+    public int RokVyroby { get; init; }
+
+    public Auto(string znacka, string model, int rokVyroby)
+    {
+        Znacka = znacka;
+        Model = model;
+        RokVyroby = rokVyroby;
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var auto = new Auto("Škoda", "Octavia", 2022);
+
+        // CHYBA PŘI PŘEKLADU! 'init' zabrání jakékoliv pozdější změně:
+        // auto.Model = "Superb";
+    }
+}
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+2. INSTANČNÍ METODY (METHODS)
+================================================================================
+
+Instanční metody umožňují provádět operace nad daty konkrétního objektu (instance).
+
+DOPORUČENÍ PRO NÁVRH:
+V instančních metodách běžných datových tříd se VYHNĚTE přímému výpisu na konzoli
+(Console.WriteLine).
+• Mnohem vhodnější je vrátit hodnotu/text pomocí 'return', případně vyvolat výjimku.
+• Třída pak bude univerzálně použitelná nejen v konzoli, ale i v grafickém okně (WPF),
+  mobilní aplikaci (MAUI) nebo na webu (ASP.NET Core).
+
+Příklad:
+--------------------------------------------------------------------------------
+public class Student
+{
+    // Field – soukromá proměnná
+    private string _jmeno;
+
+    // Property – veřejná vlastnost pro zapouzdřený přístup
+    public string Jmeno
+    {
+        get { return _jmeno; }
+        set { _jmeno = value; }
+    }
+
+    // Auto-property pro věk
+    public int Vek { get; set; }
+
+    // Konstruktor
+    public Student(string jmeno, int vek)
+    {
+        _jmeno = jmeno;
+        Vek = vek;
+    }
+
+    // Instanční metoda – neprovádí Console.WriteLine, ale vrací string!
+    public string VratInformace()
+    {
+        return $"Student: {Jmeno}, Věk: {Vek}";
+    }
+
+    // Přepsání standardní metody ToString()
+    public override string ToString()
+    {
+        return VratInformace();
+    }
+}
+
+// Použití v metodě Main:
+Student s1 = new Student("Petr", 20);
+Console.WriteLine(s1); // Výstup: Student: Petr, Věk: 20
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+3. PŘETĚŽOVÁNÍ KONSTRUKTORŮ (CONSTRUCTOR OVERLOADING)
+================================================================================
+
+• Konstruktor je speciální metoda volaná automaticky při vytváření instance.
+• Můžeme definovat více konstruktorů s různým počtem nebo typem parametrů.
+• Konstruktory mohou volat jeden druhého pomocí klíčového slova ': this(...)'.
+
+Příklad:
+--------------------------------------------------------------------------------
+public class Student
+{
+    // Privátní backing fieldy
+    private string _jmeno;
+    private int _vek;
+
+    // Vlastnosti s validací
+    public string Jmeno
+    {
+        get => _jmeno;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Jméno nesmí být prázdné.");
+            _jmeno = value;
+        }
+    }
+
+    public int Vek
+    {
+        get => _vek;
+        set
+        {
+            if (value < 0)
+                throw new ArgumentException("Věk nemůže být záporný.");
+            _vek = value;
+        }
+    }
+
+    // 1. Hlavní konstruktor se všemi parametry
+    public Student(string jmeno, int vek)
+    {
+        Jmeno = jmeno;
+        Vek = vek;
+    }
+
+    // 2. Přetížený konstruktor s výchozí hodnotou věku (deleguje na 1. konstruktor)
+    public Student(string jmeno) : this(jmeno, 18)
+    {
+    }
+
+    // 3. Bezparametrický konstruktor pro výchozí hodnoty
+    public Student() : this("Neznámý", 18)
+    {
+    }
+
+    public override string ToString()
+    {
+        return $"Student: {Jmeno}, Věk: {Vek}";
+    }
+}
+--------------------------------------------------------------------------------
+
+Použití v metodě Main:
+--------------------------------------------------------------------------------
+Student s1 = new Student("Petr", 20); // Plný konstruktor
+Student s2 = new Student("Eva");      // Zadáno jen jméno, věk bude 18
+Student s3 = new Student();           // Bez parametrů: "Neznámý", věk 18
+
+Console.WriteLine(s1); // Výstup: Student: Petr, Věk: 20
+Console.WriteLine(s2); // Výstup: Student: Eva, Věk: 18
+Console.WriteLine(s3); // Výstup: Student: Neznámý, Věk: 18
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+4. PŘETĚŽOVÁNÍ METOD (METHOD OVERLOADING)
+================================================================================
+
+• Stejně jako konstruktory můžeme přetěžovat i běžné metody.
+• Přetěžované metody mají stejné jméno, ale liší se tzv. signaturou
+  (počtem nebo datovými typy parametrů). Samotný návratový typ pro přetížení nestačí!
+
+
+--------------------------------------------------------------------------------
+4.1 Přetěžování metod a klíčové slovo 'params'
+--------------------------------------------------------------------------------
+
+Klíčové slovo 'params' umožňuje metodě přijmout proměnný počet argumentů.
+Kompilátor vždy preferuje konkrétní přesnou shodu. Pokud přesná shoda neexistuje,
+použije se varianta s 'params'.
+
+Příklad:
+--------------------------------------------------------------------------------
+class Ukazka
+{
+    // Konkrétní přetížení pro jeden int
+    public int Metoda(int a)
+    {
+        return a * a;
+    }
+
+    // Přetížení s params pro libovolný počet intů
+    public int Metoda(params int[] cisla)
+    {
+        int soucet = 0;
+        foreach (int x in cisla)
+        {
+            soucet += x;
+        }
+        return soucet;
+    }
+}
+
+// Volání:
+Ukazka u = new Ukazka();
+
+Console.WriteLine(u.Metoda(5));       // Výstup: 25 (zavolá konkrétní metodu s jedním parametrem)
+Console.WriteLine(u.Metoda(5, 10));   // Výstup: 15 (přesná shoda pro 2 inty není -> zavolá params)
+Console.WriteLine(u.Metoda(1, 2, 3)); // Výstup: 6  (zavolá metodu s params)
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+5. HODNOTOVÉ DATOVÉ TYPY – STRUKTURY (STRUCT)
+================================================================================
+
+V C# je 'struct' hodnotový typ (value type). Používá se pro reprezentaci malých,
+jednoduchých a zpravidla neměnných datových struktur (např. bod v rovině, barva,
+komplexní číslo, časový interval).
+
+
+--------------------------------------------------------------------------------
+5.1 Základní vlastnosti struktury (struct)
+--------------------------------------------------------------------------------
+
+• Alokace paměti:
+  Ukládá se přímo na zásobník (stack) namísto spravované haldy (heap).
+  To znamená minimální režii na alokaci a žádnou práci pro Garbage Collector.
+
+• Kopírování hodnotou:
+  Při přiřazení nebo předání do metody se zkopíruje celý obsah paměti struktury
+  (na rozdíl od třídy 'class', kde se kopíruje pouze reference).
+
+• Dědičnost:
+  Struktura nemůže dědit z jiné třídy ani struktury (je implicitně 'sealed').
+  Všechny struktury nepřímo dědí ze System.ValueType.
+
+• Rozhraní:
+  Struktura MŮŽE implementovat rozhraní (interface).
+
+
+--------------------------------------------------------------------------------
+5.2 Příklad základní struktury a kopírování hodnotou
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+struct Point
+{
+    public int X;
+    public int Y;
+
+    // Konstruktor struktury
+    public Point(int x, int y)
+    {
+        X = x;
+        Y = y;
+    }
+
+    public string Display()
+    {
+        return $"Point({X}, {Y})";
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        Point p1 = new Point(10, 20);
+        Console.WriteLine(p1.Display()); // Výstup: Point(10, 20)
+
+        // Kopírování hodnotou: p2 je zcela nezávislá kopie v paměti
+        Point p2 = p1;
+        p2.X = 30;
+
+        Console.WriteLine(p1.X); // Výstup: 10 (p1 zůstává nezměněné!)
+        Console.WriteLine(p2.X); // Výstup: 30 (změnilo se pouze p2)
+    }
+}
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+5.3 Přepisování metod ToString(), Equals() a GetHashCode()
+--------------------------------------------------------------------------------
+
+Struktury dědí metody z System.ValueType. Výchozí implementace Equals() ve ValueType
+používá reflexi, což je pomalé. Proto je vhodné tyto metody přepsat:
+
+Příklad:
+--------------------------------------------------------------------------------
+struct Point
+{
+    public int X;
+    public int Y;
+
+    public Point(int x, int y)
+    {
+        X = x;
+        Y = y;
+    }
+
+    public override string ToString()
+    {
+        return $"Point({X}, {Y})";
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y);
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is Point other)
+        {
+            return X == other.X && Y == other.Y;
+        }
+        return false;
+    }
+}
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+5.4 Implementace rozhraní IEquatable<T> (vysoký výkon bez boxingu)
+--------------------------------------------------------------------------------
+
+Pokud chceme maximální rychlost porovnávání struktur bez zbytečného boxingu,
+implementujeme rozhraní IEquatable<T>:
+
+Příklad:
+--------------------------------------------------------------------------------
+struct Point : IEquatable<Point>
+{
+    public int X;
+    public int Y;
+
+    public Point(int x, int y)
+    {
+        X = x;
+        Y = y;
+    }
+
+    // Přímé typové porovnání – BEZ boxingu!
+    public bool Equals(Point other)
+    {
+        return X == other.X && Y == other.Y;
+    }
+
+    // Přepsání obecné metody Equals(object)
+    public override bool Equals(object obj)
+    {
+        return obj is Point other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y);
+    }
+}
+--------------------------------------------------------------------------------
+VÝHODA:
+Volání Equals(Point) nealokuje paměť na haldě, je typově bezpečné a výrazně rychlejší.
+
+
+
+================================================================================
+6. BOXING A UNBOXING
+================================================================================
+
+• BOXING:
+  Proces, při kterém se hodnotový typ (struct, int, ...) zabalí do referenčního typu
+  (object nebo interface).
+  Hodnota je zkopírována ze zásobníku (stack) na spravovanou haldu (heap).
+
+• UNBOXING:
+  Opačný proces – explicitní převod z referenčního typu (object) zpět na původní hodnotový typ.
+  Hodnota se zkopíruje z heapu zpět na stack.
+
+Příklad:
+--------------------------------------------------------------------------------
+// 1. Boxing: int (hodnotový typ) je zabalen do proměnné typu object (referenční typ)
+int num = 42;
+object obj = num; // BOXING: probíhá alokace paměti na haldě
+Console.WriteLine(obj); // Výstup: 42
+
+// 2. Unboxing: převod objektu z haldy zpět na hodnotový typ (vyžaduje explicitní přetypování)
+int num2 = (int)obj; // UNBOXING
+Console.WriteLine(num2); // Výstup: 42
+--------------------------------------------------------------------------------
+
+DŮLEŽITÉ UPOZORNĚNÍ:
+Nikdy nepoužívejte hodnotový typ (struct) jako zámek pro synchronizaci vláken:
+  lock (cislo) { ... } // CHYBA!
+Při každém uzamčení dojde k boxingu a vznikne pokaždé jiný objekt na haldě,
+takže zámek nebude fungovat!
+
+
+
+================================================================================
+7. HODNOTOVÉ VS. REFERENČNÍ TYPY (PŘEHLED ROZDÍLŮ)
+================================================================================
+
++-------------------------+----------------------------+-----------------------------+
+| Vlastnost               | Hodnotové typy (struct)   | Referenční typy (class)     |
++-------------------------+----------------------------+-----------------------------+
+| Uložení v paměti        | Přímo na stacku            | Na heapu (stack drží odkaz) |
+| Přiřazení proměnné      | Kopíruje se celá hodnota   | Kopíruje se pouze odkaz     |
+| Výchozí hodnota         | Výchozí stav (0, false...) | null                        |
+| Režie Garbage Collectoru| Žádná                      | Vyžaduje úklid paměti (GC)  |
+| Typické příklady        | int, double, bool, struct  | string, pole, class, List<T>|
++-------------------------+----------------------------+-----------------------------+
+
+Ukázka rozdílu v chování paměti:
+--------------------------------------------------------------------------------
+// 1. STRUCT (hodnotový typ):
+struct PointStruct
+{
+    public int X;
+    public int Y;
+}
+
+PointStruct s1 = new PointStruct { X = 10, Y = 20 };
+PointStruct s2 = s1; // Vytvoří se kompletní kopie
+s2.X = 100;
+
+Console.WriteLine(s1.X); // Výstup: 10  (s1 zůstává nezměněn!)
+Console.WriteLine(s2.X); // Výstup: 100
+
+
+// 2. CLASS (referenční typ):
+class PointClass
+{
+    public int X;
+    public int Y;
+}
+
+PointClass c1 = new PointClass { X = 10, Y = 20 };
+PointClass c2 = c1; // Zkopíruje se pouze odkaz – obě proměnné ukazují na tentýž objekt
+c2.X = 100;
+
+Console.WriteLine(c1.X); // Výstup: 100 (změna se promítne i do c1!)
+Console.WriteLine(c2.X); // Výstup: 100
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+8. PŘEDÁVÁNÍ PARAMETRŮ DO METOD (HODNOTOU VS. ODKAZEM)
+================================================================================
+
+
+--------------------------------------------------------------------------------
+8.1 Hodnotový typ předávaný hodnotou (výchozí chování)
+--------------------------------------------------------------------------------
+Metoda obdrží lokální kopii hodnoty na zásobníku. Úpravy se vně metody neprojeví.
+
+--------------------------------------------------------------------------------
+void ZmenHodnotovyTyp(int x)
+{
+    x = 100; // Mění se pouze lokální kopie
+}
+
+int a = 10;
+ZmenHodnotovyTyp(a);
+Console.WriteLine(a); // Výstup: 10 (původní hodnota zůstala nezměněna)
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+8.2 Hodnotový typ předávaný odkazem (klíčové slovo 'ref')
+--------------------------------------------------------------------------------
+Metoda pracuje přímo s paměťovým místem původní proměnné.
+Proměnná MUSÍ být před voláním metody inicializována.
+
+--------------------------------------------------------------------------------
+void ZmenRef(ref int x)
+{
+    x = 100; // Změna přímo původní proměnné
+}
+
+int b = 10;
+ZmenRef(ref b);
+Console.WriteLine(b); // Výstup: 100 (proměnná byla změněna)
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+8.3 Výstupní parametr (klíčové slovo 'out')
+--------------------------------------------------------------------------------
+Slouží k vrácení hodnoty z metody ven.
+• Proměnná NEMUSÍ být před voláním inicializována.
+• Metoda MUSÍ do parametru uvnitř svého těla povinně přiřadit hodnotu.
+
+--------------------------------------------------------------------------------
+void VratCislo(out int x)
+{
+    x = 100; // Povinné přiřazení hodnoty
+}
+
+int c; // Nemusí mít hodnotu předem
+VratCislo(out c);
+Console.WriteLine(c); // Výstup: 100
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+8.4 Referenční typ předávaný hodnotou
+--------------------------------------------------------------------------------
+Zkopíruje se samotná reference (adresa). Obě reference však ukazují na stejný objekt
+na haldě. Pokud uvnitř metody změníme vlastnost objektu, změna se projeví i venku!
+
+--------------------------------------------------------------------------------
+class Student
+{
+    public string Jmeno { get; set; }
+}
+
+void ZmenObsahObjektu(Student s)
+{
+    s.Jmeno = "Eva"; // Modifikace objektu na haldě
+}
+
+Student s1 = new Student { Jmeno = "Petr" };
+ZmenObsahObjektu(s1);
+Console.WriteLine(s1.Jmeno); // Výstup: Eva (vnitřek objektu byl změněn)
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+8.5 Referenční typ předávaný odkazem ('ref' s referenčním typem)
+--------------------------------------------------------------------------------
+Předává se odkaz na referenci samotnou. Metoda tak může nejen změnit vnitřek objektu,
+ale dokonce celou proměnnou přesměrovat na úplně novou instanci!
+
+--------------------------------------------------------------------------------
+void ZmenReferenci(ref Student s)
+{
+    // Vytvoříme zbrusu nový objekt a referenci volajícího přepíšeme na něj
+    s = new Student { Jmeno = "Nový student" };
+}
+
+Student s2 = new Student { Jmeno = "Petr" };
+ZmenReferenci(ref s2);
+Console.WriteLine(s2.Jmeno); // Výstup: Nový student
+--------------------------------------------------------------------------------

@@ -1,0 +1,14 @@
+/Users/ivanromanov/Documents/Preparation/Preparation/bin/Debug/net10.0/Preparation
+/Users/ivanromanov/Documents/Preparation/Preparation/bin/Debug/net10.0/Preparation.deps.json
+/Users/ivanromanov/Documents/Preparation/Preparation/bin/Debug/net10.0/Preparation.runtimeconfig.json
+/Users/ivanromanov/Documents/Preparation/Preparation/bin/Debug/net10.0/Preparation.dll
+/Users/ivanromanov/Documents/Preparation/Preparation/bin/Debug/net10.0/Preparation.pdb
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/Preparation.GeneratedMSBuildEditorConfig.editorconfig
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/Preparation.AssemblyInfoInputs.cache
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/Preparation.AssemblyInfo.cs
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/Preparation.csproj.CoreCompileInputs.cache
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/Preparation.dll
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/refint/Preparation.dll
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/Preparation.pdb
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/Preparation.genruntimeconfig.cache
+/Users/ivanromanov/Documents/Preparation/Preparation/obj/Debug/net10.0/ref/Preparation.dll
