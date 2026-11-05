@@ -1,0 +1,505 @@
+// ============================================================================
+// KOMPLETNÍ ZDROJOVÝ KÓD PROJEKTU ConsoleApp1 (Příprava na test PV)
+// ============================================================================
+//
+// OBSAH:
+// 1. Student.cs          - Evidence žáků (Equals, GetHashCode, CompareTo, HashSet, SortedSet)
+// 2. Horse.cs            - Evidence dostihových koní (IEquatable, IComparable)
+// 3. BookType.cs         - Výčtový typ (enum) s Deweyovým desetinným systémem
+// 4. Book.cs             - Třída reprezentující knihu v knihovně
+// 5. Library.cs          - Evidence knihovny pomocí Dictionary<BookType, List<Book>>
+// 6. MineralType.cs      - Výčtový typ (enum) pro druhy minerálů
+// 7. Mineral.cs          - Třída reprezentující minerál
+// 8. MineralCollector.cs - Třída sběratele minerálů s metodou pro filtrování
+// 9. Program.cs          - Hlavní spouštěcí třída s ukázkami všech úloh
+//
+// ============================================================================
+
+
+// ============================================================================
+// 1. SOUBOR: Student.cs
+// Účel: Evidence žáků ve třídě.
+// Implementuje IComparable<Student> a IEquatable<Student> tak, aby bylo možné
+// žáky vkládat jak do HashSetu (unikátnost čísla), tak do SortedSetu (řazení
+// podle příjmení a jména).
+// ============================================================================
+
+namespace ConsoleApp1;
+
+public class Student : IComparable<Student>, IEquatable<Student>
+{
+    // Vlastnosti žáka
+    public string? Name { get; set; }
+    public string? Surname { get; set; }
+    public int Number { get; set; } // Unikátní číslo ve třídním výkazu
+
+    /// <summary>
+    /// Konstruktor pro vytvoření nového žáka.
+    /// </summary>
+    public Student(string? name, string? surname, int number)
+    {
+        Name = name;
+        Surname = surname;
+        Number = number;
+    }
+
+    /// <summary>
+    /// Řazení žáků (používá SortedSet, List.Sort(), Array.Sort()):
+    /// 1. Kritérium: Příjmení žáka (abecedně s ohledem na českou diakritiku).
+    /// 2. Kritérium: Křestní jméno žáka (pokud mají dva žáci stejné příjmení).
+    /// 3. Kritérium: Číslo žáka (rozstřel pro SortedSet, aby dva různí žáci
+    ///    se stejným jménem nebyli považováni za duplikáty a neztratili se).
+    /// </summary>
+    public int CompareTo(Student? other)
+    {
+        // Pravidlo .NET: Jakýkoli existující objekt je větší než null
+        if (other is null) return 1;
+
+        // Optimalizace: Porovnáváme-li objekt se sebou samým v paměti
+        if (ReferenceEquals(this, other)) return 0;
+
+        // 1. Porovnání podle příjmení
+        int lastNameComparison = string.Compare(Surname, other.Surname, StringComparison.CurrentCulture);
+        if (lastNameComparison != 0)
+        {
+            return lastNameComparison;
+        }
+
+        // 2. Porovnání podle křestního jména (při shodě příjmení)
+        int firstNameComparison = string.Compare(Name, other.Name, StringComparison.CurrentCulture);
+        if (firstNameComparison != 0)
+        {
+            return firstNameComparison;
+        }
+
+        // 3. Pojistka: Porovnání podle čísla výkazu (pro unikátnost v SortedSet)
+        return Number.CompareTo(other.Number);
+    }
+
+    /// <summary>
+    /// Typově bezpečná kontrola rovnosti pro rozhraní IEquatable<Student>.
+    /// Využívá ji zejména HashSet<Student> a Dictionary<Student, ...>.
+    /// Každý žák má unikátní číslo ve výkazu, proto se rovnost určuje podle čísla.
+    /// </summary>
+    public bool Equals(Student? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Number == other.Number;
+    }
+
+    /// <summary>
+    /// Přepsaná metoda z System.Object.
+    /// Zajišťuje fungování rovnosti i při předání přes obecný typ object.
+    /// Bezpečně přetypuje pomocí operátoru 'as' a předá volání metodě Equals(Student?).
+    /// </summary>
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as Student);
+    }
+
+    /// <summary>
+    /// Výpočet hashovacího kódu pro hashovací kolekce (např. HashSet, Dictionary).
+    /// Zlaté pravidlo: Do GetHashCode musí jít stejná vlastnost jako do Equals (zde Number).
+    /// </summary>
+    public override int GetHashCode()
+    {
+        return Number.GetHashCode();
+    }
+
+    /// <summary>
+    /// Textová reprezentace žáka pro snadný výpis do konzole.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"{Number}: {Surname} {Name}";
+    }
+}
+
+
+// ============================================================================
+// 2. SOUBOR: Horse.cs
+// Účel: Evidence dostihových koní.
+// Ukázka řazení podle názvu koně, jména jezdce a startovního čísla.
+// ============================================================================
+
+namespace ConsoleApp1;
+
+class Horse : IEquatable<Horse>, IComparable<Horse>
+{
+    public string? Name { get; set; }
+    public string? Rider_name { get; set; }
+    public int Number { get; set; }
+
+    public Horse(string? name, string? rider, int num)
+    {
+        Name = name;
+        Rider_name = rider;
+        Number = num;
+    }
+
+    /// <summary>
+    /// Řazení koní:
+    /// 1. Podle jména koně
+    /// 2. Podle jména jezdce
+    /// 3. Podle startovního čísla
+    /// </summary>
+    public int CompareTo(Horse? other)
+    {
+        if (other is null) return 1;
+        if (ReferenceEquals(this, other)) return 0;
+
+        int horseCmp = string.Compare(Name, other.Name, StringComparison.CurrentCulture);
+        if (horseCmp != 0) return horseCmp;
+
+        int riderCmp = string.Compare(Rider_name, other.Rider_name, StringComparison.CurrentCulture);
+        if (riderCmp != 0) return riderCmp;
+
+        return Number.CompareTo(other.Number);
+    }
+
+    /// <summary>
+    /// Shoda koní podle startovního čísla.
+    /// </summary>
+    public bool Equals(Horse? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Number == other.Number;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as Horse);
+    }
+
+    public override int GetHashCode()
+    {
+        return Number.GetHashCode();
+    }
+
+    public override string ToString()
+    {
+        return $"Kůň: {Name} (Jezdec: {Rider_name}, Číslo: {Number})";
+    }
+}
+
+
+// ============================================================================
+// 3. SOUBOR: BookType.cs
+// Účel: Výčtový typ (enum) pro Deweyův desetinný systém.
+// Každé položce je přiřazena odpovídající číselná hodnota (0, 100, 200, ...).
+// ============================================================================
+
+namespace ConsoleApp1;
+
+enum BookType
+{
+    Všeobecné = 0,               // Počítačové vědy, encyklopedie
+    Filozofie = 100,             // Filozofie a psychologie
+    Náboženství = 200,           // Teologie a náboženství
+    Sociologie = 300,            // Společenské vědy
+    Filologie = 400,             // Jazykověda
+    Přírodní_vědy = 500,         // Matematika, fyzika, biologie
+    Užité_vědy = 600,            // Technika, medicína, zemědělství
+    Umění = 700,                 // Výtvarné umění, hudba, sport
+    Literatura_a_rétorika = 800, // Poezie, próza, rétorika
+    Geografie_a_historie = 900   // Dějepis, zeměpis, biografie
+}
+
+
+// ============================================================================
+// 4. SOUBOR: Book.cs
+// Účel: Reprezentace jednotlivé knihy ve sbírce knihovny.
+// ============================================================================
+
+namespace ConsoleApp1;
+
+class Book
+{
+    public string? Name { get; set; }
+    public string? Author { get; set; }
+    public BookType BookType { get; set; }
+
+    public Book(string? name, string? author, BookType bookType)
+    {
+        Name = name;
+        Author = author;
+        BookType = bookType;
+    }
+
+    /// <summary>
+    /// Přehledný textový výpis knihy včetně formátovaného Deweyova kódu.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"\"{Name}\" (autor: {Author}) - [Dewey: {(int)BookType:D3} {BookType}]";
+    }
+}
+
+
+// ============================================================================
+// 5. SOUBOR: Library.cs
+// Účel: Evidence všech knih v knihovně.
+// Využívá Dictionary<BookType, List<Book>> pro bleskové vyhledávání O(1).
+// ============================================================================
+
+namespace ConsoleApp1;
+
+class Library
+{
+    // Slovník seskupující knihy:
+    // Klíč    = Třída Deweyova systému (např. Přírodní_vědy)
+    // Hodnota = Seznam knih (List<Book>) zařazených do této třídy
+    private Dictionary<BookType, List<Book>> _booksByClass;
+
+    public Library()
+    {
+        _booksByClass = new Dictionary<BookType, List<Book>>();
+    }
+
+    /// <summary>
+    /// Uloží novou knihu do knihovny a zařadí ji do příslušné Deweyovy třídy.
+    /// </summary>
+    /// <param name="book">Instance knihy k přidání.</param>
+    public void Add(Book? book)
+    {
+        if (book is null) return;
+
+        // Pokud pro danou třídu ještě v knihovně neexistuje seznam knih, vytvoříme ho
+        if (!_booksByClass.ContainsKey(book.BookType))
+        {
+            _booksByClass[book.BookType] = new List<Book>();
+        }
+
+        // Přidáme knihu do příslušného seznamu
+        _booksByClass[book.BookType].Add(book);
+    }
+
+    /// <summary>
+    /// Vyhledá a vrátí seznam všech knih zadané Deweyovy třídy.
+    /// Operace probíhá v čase O(1) bez nutnosti procházet celou sbírku knih.
+    /// </summary>
+    /// <param name="bookType">Kategorie podle Deweyova systému.</param>
+    /// <returns>Kopie seznamu nalezených knih nebo prázdný seznam.</returns>
+    public List<Book> Search(BookType bookType)
+    {
+        if (_booksByClass.TryGetValue(bookType, out var books))
+        {
+            // Vrátíme novou instanci seznamu, aby volající nemohl přímo upravit interní data
+            return new List<Book>(books);
+        }
+
+        // Pokud v dané třídě žádné knihy nejsou, vrátíme prázdný seznam (nikoli null)
+        return new List<Book>();
+    }
+
+    /// <summary>
+    /// Přetížení metody Search umožňující vyhledávat přímo podle celočíselného kódu (např. 100, 500).
+    /// </summary>
+    /// <param name="deweyCode">Číslo Deweyovy třídy (např. 500).</param>
+    public List<Book> Search(int deweyCode)
+    {
+        return Search((BookType)deweyCode);
+    }
+}
+
+
+// ============================================================================
+// 6. SOUBOR: MineralType.cs
+// Účel: Výčtový typ (enum) pro druhy minerálů.
+// ============================================================================
+
+namespace ConsoleApp1;
+
+enum MineralType
+{
+    Prvky,
+    Sulfidy,
+    Halogenidy,
+    Oxidy,
+    Hydroxidy,
+    Uhličitany,
+    Sírany,
+    Fosforečnany,
+    Kremičitany,
+    Organické
+}
+
+
+// ============================================================================
+// 7. SOUBOR: Mineral.cs
+// Účel: Reprezentace jednotlivého minerálu.
+// ============================================================================
+
+namespace ConsoleApp1;
+
+class Mineral
+{
+    public string? Name { get; set; }
+    public MineralType Type { get; set; }
+
+    public Mineral(string? name, MineralType mineralType)
+    {
+        Name = name;
+        Type = mineralType;
+    }
+
+    public override string ToString()
+    {
+        return $"{Name} ({Type})";
+    }
+}
+
+
+// ============================================================================
+// 8. SOUBOR: MineralCollector.cs
+// Účel: Třída reprezentující sběratele minerálů.
+// Obsahuje metody pro přidání minerálu a jeho vyfiltrování podle typu.
+// ============================================================================
+
+namespace ConsoleApp1;
+
+class MineralCollector
+{
+    public string? Name { get; set; }
+
+    // Kolekce pro uložení všech minerálů sběratele
+    public List<Mineral> Minerals { get; set; }
+
+    public MineralCollector(string? name)
+    {
+        Name = name;
+        Minerals = new List<Mineral>();
+    }
+
+    /// <summary>
+    /// Přidá minerál do sbírky a vrátí aktuální seznam minerálů.
+    /// </summary>
+    public List<Mineral> Add(Mineral m)
+    {
+        Minerals.Add(m);
+        return Minerals;
+    }
+
+    /// <summary>
+    /// Vyfiltruje ze sbírky pouze minerály odpovídajícího typu.
+    /// </summary>
+    /// <param name="type">Hledaný typ minerálu.</param>
+    /// <returns>Nový seznam obsahující pouze vyfiltrované minerály.</returns>
+    public List<Mineral> Filter_by_type(MineralType type)
+    {
+        List<Mineral> filteredMinerals = new List<Mineral>();
+
+        foreach (var m in Minerals)
+        {
+            if (m.Type == type)
+            {
+                filteredMinerals.Add(m);
+            }
+        }
+
+        return filteredMinerals;
+    }
+
+    public override string ToString()
+    {
+        return $"{Name} (celkem minerálů: {Minerals.Count})";
+    }
+}
+
+
+// ============================================================================
+// 9. SOUBOR: Program.cs
+// Účel: Hlavní vstupní bod programu (Main) s ukázkami všech tří úloh:
+// 1. Evidence studentů (test HashSetu i SortedSetu)
+// 2. Knihovna a Deweyův systém (přidání a vyhledávání)
+// 3. Sběratel minerálů (filtrování podle typu)
+// ============================================================================
+
+namespace ConsoleApp1;
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("==================================================");
+        Console.WriteLine("1. TEST: STUDENTI (HashSet & SortedSet)");
+        Console.WriteLine("==================================================");
+
+        // Test HashSet (unikátnost podle čísla žáka ve výkazu)
+        var studentHashSet = new HashSet<Student>
+        {
+            new Student("Jan", "Novák", 1),
+            new Student("Petr", "Svoboda", 2),
+            new Student("Eva", "Dvořáková", 3)
+        };
+
+        // Pokus o vložení duplikátu se stejným číslem 1
+        bool studentDuplicateAdded = studentHashSet.Add(new Student("Karel", "Novák", 1));
+        Console.WriteLine($"Pokus o přidání žáka se stejným číslem 1: {studentDuplicateAdded} (očekáváno: False)");
+        Console.WriteLine($"Počet žáků v HashSetu: {studentHashSet.Count} (očekáváno: 3)");
+
+        // Test SortedSet (řazení: Příjmení -> Jméno -> Číslo)
+        var studentSortedSet = new SortedSet<Student>
+        {
+            new Student("Jan", "Novák", 1),
+            new Student("Adam", "Novák", 4),
+            new Student("Petr", "Svoboda", 2),
+            new Student("Barbora", "Dvořáková", 5),
+            new Student("Alena", "Dvořáková", 3)
+        };
+
+        Console.WriteLine("\nSeřazení žáci v SortedSet (Příjmení -> Jméno):");
+        foreach (var s in studentSortedSet)
+        {
+            Console.WriteLine($"  {s}");
+        }
+
+        Console.WriteLine("\n==================================================");
+        Console.WriteLine("2. TEST: KNIHOVNA (Deweyův desetinný systém)");
+        Console.WriteLine("==================================================");
+
+        var library = new Library();
+        library.Add(new Book("Stručné dějiny času", "Stephen Hawking", BookType.Přírodní_vědy));
+        library.Add(new Book("Původ druhů", "Charles Darwin", BookType.Přírodní_vědy));
+        library.Add(new Book("Ústava", "Platón", BookType.Filozofie));
+        library.Add(new Book("Kritika čistého rozumu", "Immanuel Kant", BookType.Filozofie));
+        library.Add(new Book("Válka a mír", "Lev Nikolajevič Tolstoj", BookType.Literatura_a_rétorika));
+
+        Console.WriteLine("Knihy v kategorii Přírodní vědy (500):");
+        foreach (var b in library.Search(BookType.Přírodní_vědy))
+        {
+            Console.WriteLine($"  - {b}");
+        }
+
+        Console.WriteLine("\nKnihy v kategorii Filozofie (100) vyhledané číslem 100:");
+        foreach (var b in library.Search(100))
+        {
+            Console.WriteLine($"  - {b}");
+        }
+
+        Console.WriteLine("\n==================================================");
+        Console.WriteLine("3. TEST: SBĚRATEL MINERÁLŮ (Filtrování podle typu)");
+        Console.WriteLine("==================================================");
+
+        var collector = new MineralCollector("Karel Sběratel");
+        collector.Add(new Mineral("Zlato", MineralType.Prvky));
+        collector.Add(new Mineral("Pyrit", MineralType.Sulfidy));
+        collector.Add(new Mineral("Křemen", MineralType.Oxidy));
+        collector.Add(new Mineral("Korund", MineralType.Oxidy));
+        collector.Add(new Mineral("Kalcit", MineralType.Uhličitany));
+
+        Console.WriteLine($"Všechny minerály sběratele ({collector.Name}):");
+        foreach (var m in collector.Minerals)
+        {
+            Console.WriteLine($"  - {m}");
+        }
+
+        Console.WriteLine("\nFiltrování minerálů typu Oxidy:");
+        foreach (var m in collector.Filter_by_type(MineralType.Oxidy))
+        {
+            Console.WriteLine($"  - {m}");
+        }
+    }
+}

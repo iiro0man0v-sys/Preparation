@@ -12,3 +12,4 @@
 /Users/ivanromanov/Documents/PV_preparation/ConsoleApp1/obj/Debug/net10.0/ConsoleApp1.pdb
 /Users/ivanromanov/Documents/PV_preparation/ConsoleApp1/obj/Debug/net10.0/ConsoleApp1.genruntimeconfig.cache
 /Users/ivanromanov/Documents/PV_preparation/ConsoleApp1/obj/Debug/net10.0/ref/ConsoleApp1.dll
+/Users/ivanromanov/Documents/PV_preparation/ConsoleApp1/obj/Debug/net10.0/ConsoleApp1.sourcelink.json

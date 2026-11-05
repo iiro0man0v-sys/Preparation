@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/ivanromanov/Documents/Preparation/Preparation/Preparation.csproj",
+      "projectUniqueName": "/Users/ivanromanov/Documents/PV_preparation/Preparation/Preparation.csproj",
       "projectName": "Preparation",
-      "projectPath": "/Users/ivanromanov/Documents/Preparation/Preparation/Preparation.csproj",
+      "projectPath": "/Users/ivanromanov/Documents/PV_preparation/Preparation/Preparation.csproj",
       "packagesPath": "/Users/ivanromanov/.nuget/packages/",
-      "outputPath": "/Users/ivanromanov/Documents/Preparation/Preparation/obj/",
+      "outputPath": "/Users/ivanromanov/Documents/PV_preparation/Preparation/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/ivanromanov/.nuget/NuGet/NuGet.Config"
